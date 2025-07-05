@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,11 +10,10 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// connect to database
-
+// MongoDB URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jcgtqm0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// MongoDB Client Setup
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -23,25 +22,42 @@ const client = new MongoClient(uri, {
   },
 });
 
+// Main Async Function
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
+    console.log("MongoDB connected ✅");
+
+    const db = client.db("courierDB");
+    const parcelCollection = db.collection("parcel");
+
+    // GET all parcels
+    app.get("/parcels", async (req, res) => {
+      const cursor = parcelCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // POST a new parcel
+    app.post("/parcels", async (req, res) => {
+      const newParcel = req.body;
+      const result = await parcelCollection.insertOne(newParcel);
+      res.send(result);
+    });
+
+  } catch (err) {
+    console.error("DB Error:", err);
   }
 }
-// run().catch(console.dir);
 
+run();
+
+// Root route
 app.get("/", (req, res) => {
   res.send("the parcel is coming....");
 });
+
+// Start server
 app.listen(port, () => {
-  console.log(`the port is running on ${port}`);
+  console.log(`The port is running on ${port} 🚀`);
 });
