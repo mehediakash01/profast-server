@@ -31,12 +31,24 @@ async function run() {
     const db = client.db("courierDB");
     const parcelCollection = db.collection("parcel");
 
-    // GET all parcels
-    app.get("/parcels", async (req, res) => {
-      const cursor = parcelCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
+   // GET parcels (all or user-specific)
+app.get("/parcels", async (req, res) => {
+  try {
+    const { email } = req.query; // e.g., /parcels?email=user@gmail.com
+
+    const query = email ? { created_by: email } : {};
+    const result = await parcelCollection
+      .find(query)
+      .sort({ createdAt: -1 }) // latest first
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error("Failed to fetch parcels:", error);
+    res.status(500).send({ error: "Failed to fetch parcels" });
+  }
+});
+
 
     // POST a new parcel
     app.post("/parcels", async (req, res) => {
@@ -44,6 +56,14 @@ async function run() {
       const result = await parcelCollection.insertOne(newParcel);
       res.send(result);
     });
+
+    // delete a parcel
+    app.delete('/parcels/:id', async (req, res) => {
+  const id = req.params.id;
+  const result = await parcelCollection.deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+
 
   } catch (err) {
     console.error("DB Error:", err);
