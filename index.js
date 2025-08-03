@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const Stripe = require("stripe");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-
+const admin = require("firebase-admin");
 const app = express();
 const stripe = Stripe(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 3000;
@@ -11,7 +11,11 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+const serviceAccount = require("./firebaseAdmin.json");
 
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 // MongoDB URI
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jcgtqm0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -24,6 +28,28 @@ const client = new MongoClient(uri, {
   },
 });
 
+// jwt token
+
+const verifyFBToken = async (req, res, next) => {
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                return res.status(401).send({ message: 'unauthorized access' })
+            }
+            const token = authHeader.split(' ')[1];
+            if (!token) {
+                return res.status(401).send({ message: 'unauthorized access' })
+            }
+
+            // verify the token
+            try {
+                const decoded = await admin.auth().verifyIdToken(token);
+                req.decoded = decoded;
+                next();
+            }
+            catch (error) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+        }
 // Main Async Function
 async function run() {
   try {
@@ -35,7 +61,7 @@ async function run() {
     const paymentsCollection = db.collection("payments");
 
     // GET parcels (all or user-specific)
-    app.get("/parcels", async (req, res) => {
+    app.get("/parcels", verifyFBToken, async  (req, res) => {
       try {
         const { email } = req.query;
         const query = email ? { created_by: email } : {};
