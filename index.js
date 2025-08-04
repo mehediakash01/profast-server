@@ -59,7 +59,7 @@ async function run() {
     const db = client.db("courierDB");
     const parcelCollection = db.collection("parcel");
     const paymentsCollection = db.collection("payments");
-
+    const trackingCollection = db.collection("tracking");
     // GET parcels (all or user-specific)
     app.get("/parcels", verifyFBToken, async  (req, res) => {
       try {
