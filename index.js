@@ -85,6 +85,25 @@ async function run() {
       }
     });
 
+
+    // posting tracking update
+
+     app.post("/tracking", async (req, res) => {
+            const { tracking_id, parcel_id, status, message, updated_by='' } = req.body;
+
+            const log = {
+                tracking_id,
+                parcel_id: parcel_id ? new ObjectId(parcel_id) : undefined,
+                status,
+                message,
+                time: new Date(),
+                updated_by,
+            };
+
+            const result = await trackingCollection.insertOne(log);
+            res.send({ success: true, insertedId: result.insertedId });
+        });
+
     // GET payment history (user or admin)
     app.get("/payments", async (req, res) => {
       try {
