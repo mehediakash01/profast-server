@@ -194,11 +194,25 @@ async function run() {
 
     // rider routes
 
-       app.post('/riders', async (req, res) => {
+       app.post('/riders', verifyFBToken, async (req, res) => {
             const rider = req.body;
             const result = await ridersCollection.insertOne(rider);
             res.send(result);
         })
+
+            app.get("/riders/pending",verifyFBToken, async (req, res) => {
+            try {
+                const pendingRiders = await ridersCollection
+                    .find({ status: "pending" })
+                    .toArray();
+
+                res.send(pendingRiders);
+            } catch (error) {
+                console.error("Failed to load pending riders:", error);
+                res.status(500).send({ message: "Failed to load pending riders" });
+            }
+        });
+
 
     
 
