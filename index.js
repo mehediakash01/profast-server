@@ -60,6 +60,7 @@ async function run() {
     const parcelCollection = db.collection("parcel");
     const paymentsCollection = db.collection("payments");
     const trackingCollection = db.collection("tracking");
+    const ridersCollection = db.collection('riders');
     // GET parcels (all or user-specific)
     app.get("/parcels", verifyFBToken, async  (req, res) => {
       try {
@@ -190,6 +191,19 @@ async function run() {
         res.status(500).send({ message: "Failed to record payment" });
       }
     });
+
+    // rider routes
+
+       app.post('/riders', async (req, res) => {
+            const rider = req.body;
+            const result = await ridersCollection.insertOne(rider);
+            res.send(result);
+        })
+
+    
+
+
+    
   } catch (err) {
     console.error("DB Error:", err);
   }
