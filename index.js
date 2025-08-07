@@ -213,6 +213,11 @@ async function run() {
             }
         });
 
+              app.get("/riders/active", async (req, res) => {
+            const result = await ridersCollection.find({ status: "active" }).toArray();
+            res.send(result);
+        });
+
          app.patch("/riders/:id/status", async (req, res) => {
             const { id } = req.params;
             const { status } = req.body;
