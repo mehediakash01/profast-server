@@ -260,6 +260,22 @@ async function run() {
       res.send(result);
     });
 
+      app.get("/riders/available", async (req, res) => {
+            const { district } = req.query;
+
+            try {
+                const riders = await ridersCollection
+                    .find({
+                        district,
+                    })
+                    .toArray();
+
+                res.send(riders);
+            } catch (err) {
+                res.status(500).send({ message: "Failed to load riders" });
+            }
+        });
+
     app.patch("/riders/:id/status", async (req, res) => {
       const { id } = req.params;
       const { status } = req.body;
